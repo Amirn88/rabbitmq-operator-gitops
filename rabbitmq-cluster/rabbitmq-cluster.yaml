@@ -1,0 +1,29 @@
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: coral-rabbitmq
+  namespace: your-app
+spec:
+  replicas: 3
+  image: rabbitmq:3.13-management
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2
+      memory: 2Gi
+  persistence:
+    storageClassName: premium-rwo   # GKE premium SSD StorageClass
+    storage: 20Gi
+  rabbitmq:
+    additionalConfig: |
+      log.console.level = info
+      channel_max = 1500
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: coral-rabbitmq
+          topologyKey: kubernetes.io/hostname   # spread across nodes
