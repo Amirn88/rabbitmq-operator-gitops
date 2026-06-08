@@ -1,0 +1,49 @@
+# apps/rabbitmq-operator/application.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: rabbitmq-cluster-operator
+  namespace: argocd
+  # Prevent ArgoCD from deleting CRDs on app deletion
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/background
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"   # deploy operator before tenant CRs
+spec:
+  project: infrastructure
+
+  source:
+    repoURL: https://charts.bitnami.com/bitnami
+    chart: rabbitmq-cluster-operator
+    targetRevision: 4.x.x
+    helm:
+      releaseName: rabbitmq-cluster-operator
+      values: |
+        rbac:
+          create: true
+        serviceAccount:
+          create: true
+          annotations:
+            iam.gke.io/gcp-service-account: rmq-operator@YOUR_PROJECT.iam.gserviceaccount.com
+        installCRDs: true
+        webhook:
+          enabled: true
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: rabbitmq-system
+
+  syncPolicy:
+    automated:
+      prune: false        # never prune CRDs automatically
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true    # required for CRDs with large annotations
+      - RespectIgnoreDifferences=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
