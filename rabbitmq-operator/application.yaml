@@ -10,12 +10,12 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "0"   # deploy operator before tenant CRs
 spec:
-  project: infrastructure
+  project: default
 
   source:
     repoURL: https://charts.bitnami.com/bitnami
     chart: rabbitmq-cluster-operator
-    targetRevision: 4.x.x
+    targetRevision: 4.9.5
     helm:
       releaseName: rabbitmq-cluster-operator
       values: |
